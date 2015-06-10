@@ -32,5 +32,10 @@ asActions = conduitGet get
 
 handleClient :: TVar (Map Unique AppData) -> TVar (World) -> AppData -> IO ()
 handleClient connectionsRef stateRef client = 
-    appSource client $= asActions $$ awaitForever $ \action -> do
-        liftIO $ putStrLn $ "Action " ++ show action ++ " received"
+    appSource client $= asActions $$ awaitForever $ \action -> liftIO $ do
+        world <- atomically $ do
+            modifyTVar' stateRef (+action)
+            readTVar stateRef
+        clientMap <- atomically $ readTVar connectionsRef
+        broadcastWorld (Map.elems clientMap) world
+        putStrLn $ "Action " ++ show action ++ " received"
