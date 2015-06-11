@@ -15,11 +15,12 @@ import qualified Data.Map as Map
 import Data.Serialize
 
 import System.Environment
+import Network
 
 import Server
 import Types
 
-main = do
+main = withSocketsDo $ do
     args <- getArgs
     case args of
         ["client"] -> runClient
