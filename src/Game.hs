@@ -146,5 +146,6 @@ handleEvent :: Int -> Event -> World -> World
 handleEvent plyr (EventKey key Down _ posn) = case key of
     (SpecialKey k) -> handleKey plyr k
     (MouseButton m) -> handleMouse plyr m posn
+    _ -> id
 handleEvent _ _ = id
 
