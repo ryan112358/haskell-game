@@ -47,4 +47,5 @@ handleEventIO server event worldRef = do
 
 continuouslyWriteTo :: TVar World -> Sink World IO ()
 continuouslyWriteTo worldRef = awaitForever $ \world -> liftIO $ do
+    putStrLn "Received world update"
     atomically $ writeTVar worldRef world
