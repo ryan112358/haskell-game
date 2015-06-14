@@ -47,5 +47,6 @@ handleEventIO server event worldRef = do
 
 continuouslyWriteTo :: IORef World -> Sink World IO ()
 continuouslyWriteTo worldRef = awaitForever $ \world -> liftIO $ do
-    putStrLn "Received world update"
+    let World p1  _ _ _ = world
+    putStrLn $ "Received world update: " ++ show p1
     writeIORef worldRef world

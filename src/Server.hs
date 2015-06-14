@@ -4,6 +4,8 @@ module Server where
 
 import Conduit
 import Control.Applicative
+import Control.Concurrent (threadDelay)
+import Control.Concurrent.Async
 import Control.Concurrent.STM.TVar
 import Control.Monad
 import Control.Monad.STM
@@ -26,7 +28,9 @@ runServer = do
     playerNums <- newTVarIO Map.empty
     clients <- newTVarIO Map.empty
     world <- newTVarIO initialWorld
+    simulation <- async $ simulateWorld world 30
     runTCPServer (serverSettings 4000 "*") (server playerNums clients world)
+    cancel simulation
     
 server :: TVar (Map SockAddr Int) -> TVar (Map Unique AppData) -> TVar World -> AppData -> IO ()
 server playerNumMapRef connectionsRef worldRef client = do
@@ -58,3 +62,10 @@ handleClient connectionsRef worldRef playerNum client =
         clientMap <- atomically $ readTVar connectionsRef
         broadcastWorld (Map.elems clientMap) world
         putStrLn $ "Action " ++ show (playerNum, event) ++ " received"
+
+simulateWorld :: TVar World -> Int -> IO ()
+simulateWorld worldRef fps = let
+    delay = 1000000 `div` fps 
+    in forever $ do
+        threadDelay delay
+        atomically $ modifyTVar' worldRef (update $ fromIntegral delay / 1000000)
