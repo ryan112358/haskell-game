@@ -28,8 +28,8 @@ runServer = do
     playerNums <- newTVarIO Map.empty
     clients <- newTVarIO Map.empty
     world <- newTVarIO initialWorld
-    simulation <- async $ simulateWorld world 30
-    runTCPServer (serverSettings 4000 "*") (server playerNums clients world)
+    simulation <- async $ simulateWorld clients world 30
+    runTCPServer (noDelay $ serverSettings 4000 "*") (server playerNums clients world)
     cancel simulation
     
 server :: TVar (Map SockAddr Int) -> TVar (Map Unique AppData) -> TVar World -> AppData -> IO ()
@@ -44,7 +44,11 @@ server playerNumMapRef connectionsRef worldRef client = do
         writeTVar playerNumMapRef nums'
         return $ nums' ! addr
     putStrLn $ "Player " ++ show playerNum ++ " connected."
-    handleClient connectionsRef worldRef playerNum client
+    handleClient worldRef playerNum client
+
+noDelay :: ServerSettings -> ServerSettings
+noDelay = setAfterBind mkNoDelay where
+    mkNoDelay s = setSocketOption s NoDelay 1
 
 broadcastWorld :: [AppData] -> World -> IO ()
 broadcastWorld clients world = forM_ clients $ \client -> do
@@ -53,19 +57,21 @@ broadcastWorld clients world = forM_ clients $ \client -> do
 asEvents :: Conduit ByteString IO Event
 asEvents = conduitGet get
 
-handleClient :: TVar (Map Unique AppData) -> TVar (World) -> Int -> AppData -> IO ()
-handleClient connectionsRef worldRef playerNum client = 
+handleClient :: TVar (World) -> Int -> AppData -> IO ()
+handleClient worldRef playerNum client = 
     appSource client $= asEvents $$ awaitForever $ \event -> liftIO $ do
         world <- atomically $ do
             modifyTVar' worldRef (handleEvent playerNum event)
             readTVar worldRef
-        clientMap <- atomically $ readTVar connectionsRef
-        broadcastWorld (Map.elems clientMap) world
         putStrLn $ "Action " ++ show (playerNum, event) ++ " received"
 
-simulateWorld :: TVar World -> Int -> IO ()
-simulateWorld worldRef fps = let
+simulateWorld :: TVar (Map Unique AppData) -> TVar World -> Int -> IO ()
+simulateWorld connectionsRef worldRef fps = let
     delay = 1000000 `div` fps 
     in forever $ do
         threadDelay delay
-        atomically $ modifyTVar' worldRef (update $ fromIntegral delay / 1000000)
+        world <- atomically $ do
+            modifyTVar' worldRef (update $ fromIntegral delay / 1000000)
+            readTVar worldRef
+        connMap <- atomically $ readTVar connectionsRef
+        broadcastWorld (Map.elems connMap) world
