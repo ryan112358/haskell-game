@@ -1,6 +1,7 @@
 module Game where
 
 import Graphics.Gloss
+import Graphics.Gloss.Interface.Pure.Game
 import Data.List
 
 ------------------------
@@ -105,5 +106,5 @@ handleEvent :: Int -> Event -> World -> World
 handleEvent plyr (EventKey key Down _ posn) = case key of
 	(SpecialKey k) -> handleKey plyr k
 	(MouseButton m) -> handleMouse plyr m posn
-handleEvent _ = id
+handleEvent _ _ = id
 
