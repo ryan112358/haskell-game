@@ -58,6 +58,10 @@ spriteRad = 50
 bulletRad = 10
 foodRad = 30
 
+initialPlayer pos = Player pos (0, 0) 100 10
+
+initialWorld = World (initialPlayer (100, 100)) (initialPlayer (900, 900)) [] [] 
+
 ------------------------
 --- Simple Functions ---
 ------------------------

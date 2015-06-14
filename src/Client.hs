@@ -26,7 +26,7 @@ asWorld = conduitGet get
 window = InWindow "Moving Circles" (gameWidth, gameHeight) (0,0)
 
 runClient host port= runTCPClient (clientSettings port host) $ \server -> do
-    worldRef <- newTVarIO (error "client initial world not implemented")
+    worldRef <- newTVarIO initialWorld
     updater <- async $ appSource server $$ asWorld =$ continuouslyWriteTo worldRef
     playIO 
         window white 30 worldRef
