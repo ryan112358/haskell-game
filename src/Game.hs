@@ -7,6 +7,7 @@ module Game where
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Data.List
+import System.Random
 import Data.Serialize
 
 import GHC.Generics
@@ -54,13 +55,16 @@ gameWidth, gameHeight :: Int
 gameWidth = 1000
 gameHeight = 1000
 
-spriteRad = 50
+spriteRad = 30
 bulletRad = 10
 foodRad = 30
 
 initialPlayer pos = Player pos (0, 0) 100 10
+initialFood = map (flip Food BoostAmmo) . take 25 . 
+				zip (randomRs (100,900) (mkStdGen 111)) $ 
+				randomRs (100,900) (mkStdGen 999)
 
-initialWorld = World (initialPlayer (100, 100)) (initialPlayer (900, 900)) [] [] 
+initialWorld = World (initialPlayer (100, 100)) (initialPlayer (900, 900)) initialFood [] 
 
 ------------------------
 --- Simple Functions ---
