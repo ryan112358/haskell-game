@@ -20,7 +20,7 @@ type Ammo = Int
 type Velocity = (Float, Float)
 type Time = Float
 
-data Player = Player Point Velocity Health Ammo deriving (Generic, Eq)
+data Player = Player Point Velocity Health Ammo deriving (Generic, Eq, Show)
 data Bullet = Bullet Point Velocity deriving (Generic)
 data Type = BoostHealth | BoostAmmo deriving (Generic, Enum, Eq)
 data Food = Food Point Type deriving (Generic)
