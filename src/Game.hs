@@ -129,9 +129,13 @@ movePlayer _ player = player
         
 handleKey 1 key (World p1 p2 food bullets) = World (movePlayer key p1) p2 food bullets  
 handleKey 2 key (World p1 p2 food bullets) = World p1 (movePlayer key p2) food bullets  
+handleKey _ _ w = w
 
-handleMouse 1 LeftButton (x,y) (World p1 p2 food bullets) = error "handleMouse: can't even"
-handleMouse 2 LeftButton (x,y) (World p1 p2 food bullets) = error "handleMouse: can't even"
+handleMouse plyr LeftButton (x,y) (World p1 p2 food bullets)
+    = World p1 p2 food (bullet:bullets) where 
+        (Player (x',y') _ _ ammo) = if plyr == 1 then p1 else p2
+        bullet = Bullet (x',y') (10*vx, 10*vy)
+        (vx, vy) = let d = sqrt $ (x-x')^2+(y-y')^2 in ((x'-x)/d, (y'-y)/d)
 handleMouse _ _ _ w = w
         
 handleEvent :: Int -> Event -> World -> World
