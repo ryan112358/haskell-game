@@ -36,8 +36,10 @@ server playerNumMapRef connectionsRef worldRef client = do
         modifyTVar' connectionsRef (Map.insert id client)
         nums <- readTVar playerNumMapRef
         let playerNum = Map.size nums + 1
-        writeTVar playerNumMapRef (Map.insertWith (flip const) addr playerNum nums)
-        return $ nums ! addr
+        let nums' = Map.insertWith (flip const) addr playerNum nums
+        writeTVar playerNumMapRef nums'
+        return $ nums' ! addr
+    putStrLn $ "Player " ++ show playerNum ++ " connected."
     handleClient connectionsRef worldRef playerNum client
 
 broadcastWorld :: [AppData] -> World -> IO ()

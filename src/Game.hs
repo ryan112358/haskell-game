@@ -129,7 +129,7 @@ movePlayer _ player = player
         
 handleKey 1 key (World p1 p2 food bullets) = World (movePlayer key p1) p2 food bullets  
 handleKey 2 key (World p1 p2 food bullets) = World p1 (movePlayer key p2) food bullets  
-handleKey _ _ w = w
+handleKey _ key w = w
 
 handleMouse plyr LeftButton (x,y) (World p1 p2 food bullets)
     = World p1 p2 food (bullet:bullets) where 
