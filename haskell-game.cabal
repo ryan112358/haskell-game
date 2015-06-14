@@ -27,6 +27,5 @@ executable haskell-game
                        conduit,
                        conduit-combinators,
                        conduit-extra,
-                       gloss,
-                       word8
+                       gloss
   default-language:    Haskell2010

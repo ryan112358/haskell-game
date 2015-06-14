@@ -11,38 +11,48 @@ import Data.Conduit.Network
 import Data.Conduit.Cereal
 import Data.ByteString (ByteString)
 import Data.Serialize
-import Data.Map (Map)
+import Data.Map (Map, (!))
 import qualified Data.Map as Map
 import Data.Traversable
 import Data.Unique
 
+import Network.Socket
+
+import Graphics.Gloss.Interface.Pure.Game
+
 import Game
 
 runServer = do
+    playerNums <- newTVarIO Map.empty
     clients <- newTVarIO Map.empty
-    world <- newTVarIO 0
-    runTCPServer (serverSettings 4000 "*") (server clients world)
+    world <- newTVarIO undefined
+    runTCPServer (serverSettings 4000 "*") (server playerNums clients world)
     
-server :: TVar (Map Unique AppData) -> TVar World -> AppData -> IO ()
-server connectionsRef stateRef client = do
+server :: TVar (Map SockAddr Int) -> TVar (Map Unique AppData) -> TVar World -> AppData -> IO ()
+server playerNumMapRef connectionsRef worldRef client = do
+    let addr = appSockAddr client
     id <- newUnique
-    atomically $ modifyTVar' connectionsRef (Map.insert id client)
-    handleClient connectionsRef stateRef client
-    atomically $ modifyTVar' connectionsRef (Map.delete id)
+    playerNum <- atomically $ do
+        modifyTVar' connectionsRef (Map.insert id client)
+        nums <- readTVar playerNumMapRef
+        let playerNum = Map.size nums + 1
+        writeTVar playerNumMapRef (Map.insertWith (flip const) addr playerNum nums)
+        return $ nums ! addr
+    handleClient connectionsRef worldRef playerNum client
 
 broadcastWorld :: [AppData] -> World -> IO ()
 broadcastWorld clients world = forM_ clients $ \client -> do
     yield world $$ conduitPut put =$ appSink client
 
-asActions :: Conduit ByteString IO Action
-asActions = conduitGet get
+asEvents :: Conduit ByteString IO Event
+asEvents = conduitGet get
 
-handleClient :: TVar (Map Unique AppData) -> TVar (World) -> AppData -> IO ()
-handleClient connectionsRef stateRef client = 
-    appSource client $= asActions $$ awaitForever $ \action -> liftIO $ do
+handleClient :: TVar (Map Unique AppData) -> TVar (World) -> Int -> AppData -> IO ()
+handleClient connectionsRef worldRef playerNum client = 
+    appSource client $= asEvents $$ awaitForever $ \event -> liftIO $ do
         world <- atomically $ do
-            modifyTVar' stateRef (applyActionToWorld action)
-            readTVar stateRef
+            modifyTVar' worldRef (handleEvent playerNum event)
+            readTVar worldRef
         clientMap <- atomically $ readTVar connectionsRef
         broadcastWorld (Map.elems clientMap) world
-        putStrLn $ "Action " ++ show action ++ " received"
+        putStrLn $ "Action " ++ show (playerNum, event) ++ " received"

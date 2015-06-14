@@ -1,8 +1,15 @@
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE StandaloneDeriving #-}
+
 module Game where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Data.List
+import Data.Serialize
+
+import GHC.Generics
 
 ------------------------
 --- Data Definitions ---
@@ -13,16 +20,37 @@ type Ammo = Int
 type Velocity = (Float, Float)
 type Time = Float
 
-data Player = Player Point Velocity Health Ammo deriving Eq
-data Bullet = Bullet Point Velocity
-data Type = BoostHealth | BoostAmmo deriving (Enum, Eq)
-data Food = Food Point Type
-data World = World Player Player [Food] [Bullet]
+data Player = Player Point Velocity Health Ammo deriving (Generic, Eq)
+data Bullet = Bullet Point Velocity deriving (Generic)
+data Type = BoostHealth | BoostAmmo deriving (Generic, Enum, Eq)
+data Food = Food Point Type deriving (Generic)
+data World = World Player Player [Food] [Bullet] deriving (Generic)
+
+instance Serialize Player 
+instance Serialize Bullet 
+instance Serialize Type 
+instance Serialize Food 
+instance Serialize World 
+
+deriving instance Generic MouseButton
+deriving instance Generic Key
+deriving instance Generic SpecialKey
+deriving instance Generic KeyState 
+deriving instance Generic Modifiers 
+deriving instance Generic Event 
+
+instance Serialize MouseButton
+instance Serialize Key
+instance Serialize SpecialKey
+instance Serialize KeyState
+instance Serialize Modifiers
+instance Serialize Event
 
 ----------------------
 --- Game Constants ---
 ----------------------
 
+gameWidth, gameHeight :: Int
 gameWidth = 1000
 gameHeight = 1000
 

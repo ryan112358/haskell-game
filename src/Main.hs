@@ -5,12 +5,12 @@ import System.Environment
 import Network
 
 import Server (runServer)
---import Client (runClient)
+import Client (runClient)
 
 main = withSocketsDo $ do
     args <- getArgs
     case args of
-        --["client"] -> runClient
+        ["client"] -> runClient
         _ -> runServer
 
 

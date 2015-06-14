@@ -5,6 +5,7 @@ module Client where
 import Conduit
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async
+import Control.Concurrent.STM
 import Control.Concurrent.STM.TVar
 import Control.Monad
 import Data.ByteString (ByteString)
@@ -15,17 +16,35 @@ import qualified Data.Map as Map
 import Data.Serialize
 
 import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Interface.IO.Game
 
 import Game
 
 asWorld :: Conduit ByteString IO World
 asWorld = conduitGet get
 
-(width, height) = (400,400) :: (Float, Float)
-window = InWindow "Moving Circles" (floor width,floor height) (0,0)
+window = InWindow "Moving Circles" (gameWidth, gameHeight) (0,0)
 
 runClient = runTCPClient (clientSettings 4000 "localhost") $ \server -> do
-    
-    play window white 30 0 render handleEven handleUpdate
+    worldRef <- newTVarIO undefined
+    updater <- async $ appSource server $$ asWorld =$ continuouslyWriteTo worldRef
+    playIO 
+        window white 30 worldRef
+        renderIO
+        (handleEventIO $ appSink server)
+        ((return.) . flip const)
+    cancel updater
 
+renderIO :: TVar World -> IO Picture
+renderIO worldRef = do
+    world <- atomically $ readTVar worldRef
+    return $ render world
+
+handleEventIO :: Sink ByteString IO () -> Event -> TVar World -> IO (TVar World)
+handleEventIO server event worldRef = do
+    yield event $= conduitPut put $$ server
+    return worldRef
+
+continuouslyWriteTo :: TVar World -> Sink World IO ()
+continuouslyWriteTo worldRef = awaitForever $ \world -> liftIO $ do
+    atomically $ writeTVar worldRef world
