@@ -25,7 +25,7 @@ import Game
 runServer = do
     playerNums <- newTVarIO Map.empty
     clients <- newTVarIO Map.empty
-    world <- newTVarIO undefined
+    world <- newTVarIO (error "server initial world not implemented")
     runTCPServer (serverSettings 4000 "*") (server playerNums clients world)
     
 server :: TVar (Map SockAddr Int) -> TVar (Map Unique AppData) -> TVar World -> AppData -> IO ()

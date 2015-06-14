@@ -126,8 +126,8 @@ movePlayer _ player = player
 handleKey 1 key (World p1 p2 food bullets) = World (movePlayer key p1) p2 food bullets  
 handleKey 2 key (World p1 p2 food bullets) = World p1 (movePlayer key p2) food bullets  
 
-handleMouse 1 LeftButton (x,y) (World p1 p2 food bullets) = undefined
-handleMouse 2 LeftButton (x,y) (World p1 p2 food bullets) = undefined
+handleMouse 1 LeftButton (x,y) (World p1 p2 food bullets) = error "handleMouse: can't even"
+handleMouse 2 LeftButton (x,y) (World p1 p2 food bullets) = error "handleMouse: can't even"
 handleMouse _ _ _ w = w
         
 handleEvent :: Int -> Event -> World -> World
