@@ -25,7 +25,7 @@ asWorld = conduitGet get
 
 window = InWindow "Moving Circles" (gameWidth, gameHeight) (0,0)
 
-runClient = runTCPClient (clientSettings 4000 "localhost") $ \server -> do
+runClient host port= runTCPClient (clientSettings port host) $ \server -> do
     worldRef <- newTVarIO undefined
     updater <- async $ appSource server $$ asWorld =$ continuouslyWriteTo worldRef
     playIO 
