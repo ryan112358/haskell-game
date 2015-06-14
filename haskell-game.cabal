@@ -16,7 +16,7 @@ cabal-version:       >=1.10
 
 executable haskell-game
   main-is:             Main.hs
-  other-modules:       Server, Types
+  other-modules:       Server, Client, Game
   -- other-extensions:    
   hs-source-dirs:      src
   build-depends:       
