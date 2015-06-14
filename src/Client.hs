@@ -36,6 +36,7 @@ runClient host port = runTCPClient (clientSettings port host) $ \server -> do
 
 renderIO :: IORef World -> IO Picture
 renderIO worldRef = do
+    putStrLn "Rendering world"
     world <- readIORef worldRef
     return $ render world
 
